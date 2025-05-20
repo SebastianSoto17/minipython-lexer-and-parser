@@ -23,6 +23,8 @@ SYMBOLS = {
 def lexer(code):
     tokens = []
     lines = code.split('\n')
+    indent_stack = [0]
+
     
     for line_num, line in enumerate(lines, start=1):
 
@@ -34,6 +36,16 @@ def lexer(code):
         comment_index = line.find('#')
         if comment_index != -1:
             line = line[:comment_index]
+
+        # Handle indentation
+        # This keeps track of the current indentation level
+        indent = len(line) - len(line.lstrip(' '))
+        if indent > indent_stack[-1]:
+            tokens.append(('INDENT', '', line_num))
+            indent_stack.append(indent)
+        while indent < indent_stack[-1]:
+            tokens.append(('DEDENT', '', line_num))
+            indent_stack.pop()
 
 
         i = 0
@@ -83,7 +95,7 @@ def lexer(code):
     return tokens
 
 def main():
-    filename = "code.py"
+    filename = "tester.py"
 
     with open(filename, "r") as f:
         code = f.read()
