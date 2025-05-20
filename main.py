@@ -25,6 +25,17 @@ def lexer(code):
     lines = code.split('\n')
     
     for line_num, line in enumerate(lines, start=1):
+
+        # Skip empty lines
+        if not line.strip():
+            continue
+
+        # Ignore everything after a comment
+        comment_index = line.find('#')
+        if comment_index != -1:
+            line = line[:comment_index]
+
+
         i = 0
         while i < len(line):
             c = line[i]
@@ -45,7 +56,7 @@ def lexer(code):
                 tokens.append((token_type, word, line_num))
                 continue
 
-            # NNumbers
+            # Numbers
             if c.isdigit():
                 start = i
                 while i < len(line) and line[i].isdigit():
