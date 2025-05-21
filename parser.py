@@ -23,7 +23,7 @@ class Parser:
             stmt = self.parse_statement()
             if stmt:
                 statements.append(stmt)
-        return statements
+        return NodeFactory.create('block', statements)
 
     def parse_statement(self):
         token_type, value, line = self.current()
@@ -45,6 +45,9 @@ class Parser:
 
         elif token_type == 'IF':
             return self.parse_if()
+            
+        elif token_type == 'WHILE':
+            return self.parse_while()
 
         else:
             raise SyntaxError(f"Unexpected token {token_type} at line {line}")
@@ -61,7 +64,36 @@ class Parser:
             body.append(stmt)
 
         self.match('DEDENT')
-        return NodeFactory.create('if', condition, body)
+        
+        # Check for else clause
+        else_body = None
+        if self.current()[0] == 'ELSE':
+            self.match('ELSE')
+            self.match('COLON')
+            self.match('INDENT')
+            
+            else_body = []
+            while self.current()[0] != 'DEDENT':
+                stmt = self.parse_statement()
+                else_body.append(stmt)
+                
+            self.match('DEDENT')
+            
+        return NodeFactory.create('if', condition, body, else_body)
+
+    def parse_while(self):
+        self.match('WHILE')
+        condition = self.parse_expression()
+        self.match('COLON')
+        self.match('INDENT')
+
+        body = []
+        while self.current()[0] != 'DEDENT':
+            stmt = self.parse_statement()
+            body.append(stmt)
+
+        self.match('DEDENT')
+        return NodeFactory.create('while', condition, body)
 
     def parse_expression(self):
         # Comparaciones como x > 3 o a == b
@@ -101,6 +133,9 @@ class Parser:
         elif token_type == 'STRING':
             self.match('STRING')
             return NodeFactory.create('string', value)
+        elif token_type in ('TRUE', 'FALSE'):
+            self.match(token_type)
+            return NodeFactory.create('boolean', value)
         elif token_type == 'ID':
             self.match('ID')
             return NodeFactory.create('identifier', value)

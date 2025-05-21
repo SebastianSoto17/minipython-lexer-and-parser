@@ -2,7 +2,7 @@
 import re
 
 # List of keywords and symbols
-KEYWORDS = {'if': 'IF', 'while': 'WHILE', 'print': 'PRINT'}
+KEYWORDS = {'if': 'IF', 'while': 'WHILE', 'print': 'PRINT', 'True': 'TRUE', 'False': 'FALSE'}
 SYMBOLS = {
     '=': 'ASSIGN',
     '+': 'PLUS',
@@ -55,6 +55,23 @@ def lexer(code):
             # Ignore whitespace between tokens
             # Skip to the next line
             if c.isspace():
+                i += 1
+                continue
+
+            # String literals
+            if c == '"' or c == "'":
+                quote = c
+                start = i + 1
+                i += 1
+                while i < len(line) and line[i] != quote:
+                    if line[i] == '\\' and i + 1 < len(line):
+                        i += 2  # Skip escaped character
+                    else:
+                        i += 1
+                if i >= len(line):
+                    tokens.append(('ERROR', 'Unterminated string', line_num))
+                    break
+                tokens.append(('STRING', line[start:i], line_num))
                 i += 1
                 continue
 
