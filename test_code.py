@@ -34,7 +34,7 @@ if x > 5:
         x = x - 1
         print(x)
 else:
-    print("x is too small")
+  print("x is too small")
 """
 
 if __name__ == "__main__":

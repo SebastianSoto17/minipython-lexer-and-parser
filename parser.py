@@ -4,6 +4,7 @@ class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
         self.pos = 0
+        self.indent_stack = [0]
 
     def current(self):
         if self.pos < len(self.tokens):
@@ -48,6 +49,17 @@ class Parser:
             
         elif token_type == 'WHILE':
             return self.parse_while()
+            
+        elif token_type == 'INDENT':
+            self.match('INDENT')
+            return None
+            
+        elif token_type == 'DEDENT':
+            self.match('DEDENT')
+            return None
+
+        elif token_type == 'EOF':
+            return None
 
         else:
             raise SyntaxError(f"Unexpected token {token_type} at line {line}")
@@ -59,11 +71,13 @@ class Parser:
         self.match('INDENT')
 
         body = []
-        while self.current()[0] != 'DEDENT':
+        while self.current()[0] != 'DEDENT' and self.current()[0] != 'EOF':
             stmt = self.parse_statement()
-            body.append(stmt)
+            if stmt:
+                body.append(stmt)
 
-        self.match('DEDENT')
+        if self.current()[0] == 'DEDENT':
+            self.match('DEDENT')
         
         # Check for else clause
         else_body = None
@@ -73,11 +87,13 @@ class Parser:
             self.match('INDENT')
             
             else_body = []
-            while self.current()[0] != 'DEDENT':
+            while self.current()[0] != 'DEDENT' and self.current()[0] != 'EOF':
                 stmt = self.parse_statement()
-                else_body.append(stmt)
+                if stmt:
+                    else_body.append(stmt)
                 
-            self.match('DEDENT')
+            if self.current()[0] == 'DEDENT':
+                self.match('DEDENT')
             
         return NodeFactory.create('if', condition, body, else_body)
 
@@ -88,11 +104,13 @@ class Parser:
         self.match('INDENT')
 
         body = []
-        while self.current()[0] != 'DEDENT':
+        while self.current()[0] != 'DEDENT' and self.current()[0] != 'EOF':
             stmt = self.parse_statement()
-            body.append(stmt)
+            if stmt:
+                body.append(stmt)
 
-        self.match('DEDENT')
+        if self.current()[0] == 'DEDENT':
+            self.match('DEDENT')
         return NodeFactory.create('while', condition, body)
 
     def parse_expression(self):
